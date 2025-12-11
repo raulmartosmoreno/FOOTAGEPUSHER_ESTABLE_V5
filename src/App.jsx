@@ -225,19 +225,18 @@ function VideoCard({ video, isActive, user, onShare, onOpenComments }) {
   };
 
   const toggleLikeSidebar = (e) => {
+    e.stopPropagation();
     if (isLiked) { removeLike(video.cloudinaryId); setIsLiked(false); }
     else { addLike(video.cloudinaryId); setIsLiked(true); setMuteIcon(<FaHeart className="mute-icon-svg" style={{color: '#fe2c55'}} />); setShowMuteIcon(true); setTimeout(() => setShowMuteIcon(false), 1000); }
   };
 
   const handleInteractionStart = (e) => {
-    if (e.type === 'touchstart') e.preventDefault();
     if (e.target.closest('button, .sidebar-item, .progress-container, .description-container, .toggle-more-btn, .comments-sheet-container, .expanded-backdrop')) return;
     gestureRef.current.isHolding = false;
     gestureRef.current.holdTimer = setTimeout(() => { videoRef.current.pause(); gestureRef.current.isHolding = true; }, 250);
   };
 
   const handleInteractionEnd = (e) => {
-    if (e.type === 'touchend') e.preventDefault();
     if (e.target.closest('button, .sidebar-item, .progress-container, .description-container, .toggle-more-btn, .comments-sheet-container, .expanded-backdrop')) return;
     clearTimeout(gestureRef.current.holdTimer);
     if (gestureRef.current.isHolding) { videoRef.current.play(); gestureRef.current.isHolding = false; return; }
@@ -247,16 +246,13 @@ function VideoCard({ video, isActive, user, onShare, onOpenComments }) {
     else { gestureRef.current.lastTap = now; gestureRef.current.tapTimer = setTimeout(() => { performToggleMute(); gestureRef.current.lastTap = 0; }, 300); }
   };
   
-  const handleBackdropClick = (e) => { setIsDescExpanded(false); };
+  const handleBackdropClick = (e) => { e.stopPropagation(); setIsDescExpanded(false); };
   const confirmInstaRedirect = () => { window.open(INSTAGRAM_URL, '_blank'); setShowInstaPopup(false); };
 
   const calculateProgress = (clientX) => { const progressBar = progressBarRef.current; if (!progressBar) return 0; const rect = progressBar.getBoundingClientRect(); const x = clientX - rect.left; return Math.max(0, Math.min(1, x / rect.width)); };
   const handleScrubStart = (e) => { e.stopPropagation(); isDraggingRef.current = true; const clientX = e.touches ? e.touches[0].clientX : e.clientX; const ratio = calculateProgress(clientX); setProgress(ratio * 100); if (videoRef.current) videoRef.current.currentTime = ratio * videoRef.current.duration; if (e.type === 'mousedown') { window.addEventListener('mousemove', handleScrubMove); window.addEventListener('mouseup', handleScrubEnd); } };
   const handleScrubMove = (e) => { if (!isDraggingRef.current) return; const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; const ratio = calculateProgress(clientX); setProgress(ratio * 100); if (videoRef.current) videoRef.current.currentTime = ratio * videoRef.current.duration; };
   const handleScrubEnd = () => { if (!isDraggingRef.current) return; isDraggingRef.current = false; window.removeEventListener('mousemove', handleScrubMove); window.removeEventListener('mouseup', handleScrubEnd); };
-
-  // Helper para blindar botones
-  const stopProp = (e) => { e.stopPropagation(); };
 
   return (
     <div className="video-card" 
@@ -265,7 +261,7 @@ function VideoCard({ video, isActive, user, onShare, onOpenComments }) {
     >
       <video ref={videoRef} className="video-player" src={video.url} loop playsInline webkit-playsinline="true" preload="metadata" />
       {showInstaPopup && <div className="overlay-popup"><div className="popup-box"><div style={{marginBottom:'20px', display:'flex', flexDirection:'column', alignItems:'center'}}><FaInstagram size={40}/><p>Go to official Instagram?</p></div><div className="popup-actions"><button className="popup-btn btn-cancel" onClick={()=>setShowInstaPopup(false)}>Cancel</button><button className="popup-btn btn-confirm" onClick={confirmInstaRedirect}>Go</button></div></div></div>}
-      {isDescExpanded && <div className="expanded-backdrop" onClick={handleBackdropClick} onTouchStart={stopProp} onMouseDown={stopProp}></div>}
+      {isDescExpanded && <div className="expanded-backdrop" onClick={handleBackdropClick}></div>}
       <div className={`mute-overlay ${showMuteIcon ? 'show' : ''}`}>{muteIcon}</div>
       <div className="top-bar">
         <div className="app-title">FootagePusher</div>
@@ -274,21 +270,20 @@ function VideoCard({ video, isActive, user, onShare, onOpenComments }) {
       <div className="right-sidebar">
         <div className="profile-pic-container"><img src={PROFILE_PIC_URL} alt="Profile" className="profile-img" /></div>
         <div className="sidebar-item">
-          {/* BOTONES BLINDADOS: stopPropagation en inicio del toque */}
-          <button className="sidebar-btn" onClick={toggleLikeSidebar} onTouchStart={stopProp} onMouseDown={stopProp}>
+          <button className="sidebar-btn" onClick={toggleLikeSidebar} onMouseDown={(e)=>e.stopPropagation()} onTouchStart={(e)=>e.stopPropagation()}>
             {isLiked ? <FaHeart style={{color:'#fe2c55'}}/> : <FiHeart/>}
           </button>
           <span className="sidebar-label">{formatK(stats.likes)}</span>
         </div>
-        <div className="sidebar-item"><button className="sidebar-btn" onClick={(e)=>{e.stopPropagation(); onOpenComments(video.cloudinaryId)}} onTouchStart={stopProp} onMouseDown={stopProp}><FiMessageCircle/></button><span className="sidebar-label">{formatK(stats.commentsCount)}</span></div>
-        <div className="sidebar-item"><button className="sidebar-btn" onClick={()=>{onShare(video.url)}} onTouchStart={stopProp} onMouseDown={stopProp}><FiShare2/></button><span className="sidebar-label">Share</span></div>
-        <div className="sidebar-item"><button className="sidebar-btn" onClick={(e)=>{e.stopPropagation(); setShowInstaPopup(true)}} onTouchStart={stopProp} onMouseDown={stopProp}><FiPlus/></button></div>
+        <div className="sidebar-item"><button className="sidebar-btn" onClick={(e)=>{e.stopPropagation(); onOpenComments(video.cloudinaryId)}} onMouseDown={(e)=>e.stopPropagation()} onTouchStart={(e)=>e.stopPropagation()}><FiMessageCircle/></button><span className="sidebar-label">{formatK(stats.commentsCount)}</span></div>
+        <div className="sidebar-item"><button className="sidebar-btn" onClick={(e)=>{e.stopPropagation(); onShare(video.url)}} onMouseDown={(e)=>e.stopPropagation()} onTouchStart={(e)=>e.stopPropagation()}><FiShare2/></button><span className="sidebar-label">Share</span></div>
+        <div className="sidebar-item"><button className="sidebar-btn" onClick={(e)=>{e.stopPropagation(); setShowInstaPopup(true)}} onMouseDown={(e)=>e.stopPropagation()} onTouchStart={(e)=>e.stopPropagation()}><FiPlus/></button></div>
       </div>
       <div className="bottom-info">
         <div className="username-row"><span className="username">@footagepusher</span></div>
         <div className="description-container">
           <div className={`description-text ${isDescExpanded?'expanded':''}`}>{video.description}</div>
-          <button className="toggle-more-btn" onClick={(e)=>{e.stopPropagation();setIsDescExpanded(!isDescExpanded)}} onTouchStart={stopProp} onMouseDown={stopProp}>{isDescExpanded?"Ocultar":"Ver más"}</button>
+          <button className="toggle-more-btn" onClick={(e)=>{e.stopPropagation();setIsDescExpanded(!isDescExpanded)}} onMouseDown={(e)=>e.stopPropagation()} onTouchStart={(e)=>e.stopPropagation()}>{isDescExpanded?"Ocultar":"Ver más"}</button>
         </div>
       </div>
       <div className="progress-container" ref={progressBarRef} onMouseDown={handleScrubStart} onTouchStart={handleScrubStart} onTouchMove={handleScrubMove} onTouchEnd={handleScrubEnd}><div className="progress-bar" style={{width:`${progress}%`}}></div></div>
