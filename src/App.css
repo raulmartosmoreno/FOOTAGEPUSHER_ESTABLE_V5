@@ -1,50 +1,46 @@
-/* App.css - Mobile Native Layout & Selection Block */
+/* App.css - Solución DVH y Gestos Limpios */
 
 :root {
   --primary-color: #fe2c55;
 }
 
-/* RESET Y BLOQUEO DE SCROLL/SELECCIÓN GLOBAL */
 * {
   box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent; /* Quita el flash gris al tocar */
-  
-  /* BLOQUEO NUCLEAR DE SELECCIÓN */
-  -webkit-touch-callout: none; /* Desactiva menú contextual iOS */
-  -webkit-user-select: none;   /* Chrome/Safari/Opera */
-  -khtml-user-select: none;    /* Konqueror */
-  -moz-user-select: none;      /* Firefox */
-  -ms-user-select: none;       /* IE/Edge */
-  user-select: none;           /* Estándar */
+  -webkit-tap-highlight-color: transparent;
+  /* Bloqueo global de selección */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-/* FIX PARA ALTURA MÓVIL: Usamos fixed en body para evitar rebotes */
 html, body {
-  margin: 0; padding: 0; 
+  margin: 0; padding: 0;
   background-color: black; color: white;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  overflow: hidden; 
-  width: 100%; 
-  height: 100%; 
-  position: fixed; 
-  top: 0; left: 0; /* Anclaje firme */
+  overflow: hidden;
+  width: 100%;
+  /* CRÍTICO: height dinámica para evitar que Safari tape contenido */
+  height: 100dvh; 
+  position: fixed;
 }
 
 #root {
-  width: 100%; height: 100%;
+  width: 100%; 
+  height: 100dvh; /* Altura dinámica real */
   display: flex; justify-content: center;
   background-color: #000;
 }
 
 .app-container {
-  width: 100%; height: 100%; max-width: 480px;
+  width: 100%; 
+  height: 100%; 
+  max-width: 480px;
   position: relative;
   display: flex; flex-direction: column;
   background: #000;
   box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
 
-/* Efecto al comentar */
 .app-container.comments-open .video-scroll-container {
   transform: scale(0.92) translateY(-20px);
   border-radius: 15px; opacity: 0.6; pointer-events: none;
@@ -67,13 +63,11 @@ html, body {
   position: relative; background-color: #000; overflow: hidden;
 }
 
-/* IMPORTANTE: pointer-events none para que el video no capture eventos nativos, 
-   lo gestionamos desde el div padre (.video-card) */
 .video-player { 
   width: 100%; height: 100%; 
-  object-fit: cover; 
-  display: block; 
-  pointer-events: none; 
+  object-fit: cover; display: block; 
+  /* Pointer events auto para que detecte nuestros gestos manuales */
+  pointer-events: auto; 
 }
 
 /* UI SUPERIOR */
@@ -89,10 +83,10 @@ html, body {
 .app-title { font-weight: 700; font-size: 16px; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
 .view-count-badge { display: flex; align-items: center; background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; backdrop-filter: blur(5px); }
 
-/* SIDEBAR - Subida de seguridad para evitar corte inferior */
+/* SIDEBAR - Ajustada con DVH */
 .right-sidebar {
   position: absolute; right: 10px;
-  bottom: calc(160px + env(safe-area-inset-bottom)); /* Margen amplio */
+  bottom: calc(140px + env(safe-area-inset-bottom));
   display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 50;
 }
 .sidebar-item { display: flex; flex-direction: column; align-items: center; text-align: center; }
@@ -100,17 +94,16 @@ html, body {
 .profile-img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 .sidebar-btn {
   background: none; border: none; color: white; font-size: 26px; padding: 0; cursor: pointer;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
-  pointer-events: auto; /* Botones interactivos */
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); pointer-events: auto;
 }
 .sidebar-btn:active { transform: scale(0.9); }
 .sidebar-label { font-size: 11px; font-weight: 600; margin-top: 2px; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 
-/* INFO INFERIOR - Subida de seguridad */
+/* INFO INFERIOR */
 .bottom-info {
   position: absolute; bottom: 0; left: 0; width: 100%;
   padding: 15px; padding-right: 70px;
-  padding-bottom: calc(50px + env(safe-area-inset-bottom)); /* Margen amplio */
+  padding-bottom: calc(40px + env(safe-area-inset-bottom));
   z-index: 50; text-align: left;
   background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 40%, transparent 100%);
   display: flex; flex-direction: column; justify-content: flex-end;
@@ -133,27 +126,25 @@ html, body {
 .mute-overlay.show { opacity: 1; }
 .mute-icon-svg { color: white; font-size: 50px; stroke-width: 1.5; }
 
-/* TELÓN */
 .expanded-backdrop { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; z-index: 45; cursor: default; }
 
 /* BARRA PROGRESO */
 .progress-container {
   position: absolute; left: 0; width: 100%; height: 4px;
   background: rgba(255,255,255,0.2); cursor: pointer; z-index: 100;
-  /* Posicionada 20px desde abajo + safe area */
-  bottom: max(20px, env(safe-area-inset-bottom));
+  /* Pegado abajo, encima de la barra de inicio */
+  bottom: env(safe-area-inset-bottom);
 }
 .progress-container:hover { height: 8px; }
 .progress-bar { height: 100%; background: #fff; width: 0%; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
 
-/* PANTALLA INICIO */
+/* MODALES */
 .start-screen-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 500; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 .big-profile-container { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary-color); margin-bottom: 20px; overflow: hidden; flex-shrink: 0; display: flex; justify-content: center; align-items: center; }
 .big-profile-container img { width: 100%; height: 100%; object-fit: cover; }
 .start-title { font-size: 20px; font-weight: 700; margin-bottom: 30px; }
 .enter-system-btn { background: var(--primary-color); color: white; border: none; padding: 12px 35px; font-size: 16px; font-weight: 700; border-radius: 30px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
 
-/* MODALES */
 .overlay-popup { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
 .popup-box { background: #1a1a1a; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #333; max-width: 80%; width: 300px; }
 .popup-actions { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
@@ -161,8 +152,7 @@ html, body {
 .btn-confirm { background: var(--primary-color); color: white; }
 .btn-cancel { background: #333; color: white; }
 
-/* SHEET COMENTARIOS */
-.comments-sheet-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 70%; background-color: #121212; z-index: 300; border-top-left-radius: 15px; border-top-right-radius: 15px; transform: translateY(100%); transition: transform 0.3s; display: flex; flex-direction: column; max-height: 80vh; }
+.comments-sheet-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 70%; background-color: #121212; z-index: 300; border-top-left-radius: 15px; border-top-right-radius: 15px; transform: translateY(100%); transition: transform 0.3s; display: flex; flex-direction: column; max-height: 80dvh; }
 .comments-sheet-container.open { transform: translateY(0); }
 .sheet-backdrop { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 299; }
 .sheet-handle { width: 40px; height: 4px; background-color: #444; border-radius: 2px; margin: 10px auto; flex-shrink: 0; }
@@ -177,7 +167,6 @@ html, body {
 .comment-input-area input { flex: 1; background: #262626; border: none; padding: 10px 15px; border-radius: 20px; color: white; outline: none; }
 .comment-input-area button { background: none; border: none; color: var(--primary-color); font-weight: 600; cursor: pointer; }
 
-/* PANTALLA FINAL */
 .end-screen-content { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; color: white; text-align: center; gap: 15px; }
 .end-message { font-size: 24px; font-weight: 800; text-transform: uppercase; }
 .sicko-text { color: var(--primary-color); font-family: inherit; font-weight: 800; font-size: 28px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; }
