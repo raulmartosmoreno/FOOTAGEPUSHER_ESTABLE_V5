@@ -230,20 +230,25 @@ function VideoCard({ video, isActive, user, onShare, onOpenComments }) {
     else { addLike(video.cloudinaryId); setIsLiked(true); setMuteIcon(<FaHeart className="mute-icon-svg" style={{color: '#fe2c55'}} />); setShowMuteIcon(true); setTimeout(() => setShowMuteIcon(false), 1000); }
   };
 
-  const handleInteractionStart = (e) => {
+  const handleVideoClick = (e) => {
+    // Si el click fue en un botón, ignoramos
     if (e.target.closest('button, .sidebar-item, .progress-container, .description-container, .toggle-more-btn, .comments-sheet-container, .expanded-backdrop')) return;
-    gestureRef.current.isHolding = false;
-    gestureRef.current.holdTimer = setTimeout(() => { videoRef.current.pause(); gestureRef.current.isHolding = true; }, 250);
-  };
 
-  const handleInteractionEnd = (e) => {
-    if (e.target.closest('button, .sidebar-item, .progress-container, .description-container, .toggle-more-btn, .comments-sheet-container, .expanded-backdrop')) return;
-    clearTimeout(gestureRef.current.holdTimer);
-    if (gestureRef.current.isHolding) { videoRef.current.play(); gestureRef.current.isHolding = false; return; }
     const now = Date.now();
-    const timeDiff = now - gestureRef.current.lastTap;
-    if (timeDiff < 300 && timeDiff > 0) { clearTimeout(gestureRef.current.tapTimer); performDoubleTapLike(); gestureRef.current.lastTap = 0; }
-    else { gestureRef.current.lastTap = now; gestureRef.current.tapTimer = setTimeout(() => { performToggleMute(); gestureRef.current.lastTap = 0; }, 300); }
+    const timeSinceLastClick = now - gestureRef.current.lastTap;
+
+    if (timeSinceLastClick < 300) {
+      // DOBLE CLICK DETECTADO
+      clearTimeout(gestureRef.current.tapTimer); // Cancelamos el Mute pendiente
+      performDoubleTapLike();
+      gestureRef.current.lastTap = 0; // Reset
+    } else {
+      // PRIMER CLICK (Esperamos 300ms)
+      gestureRef.current.lastTap = now;
+      gestureRef.current.tapTimer = setTimeout(() => {
+        performToggleMute();
+      }, 300);
+    }
   };
   
   const handleBackdropClick = (e) => { e.stopPropagation(); setIsDescExpanded(false); };
@@ -255,10 +260,7 @@ function VideoCard({ video, isActive, user, onShare, onOpenComments }) {
   const handleScrubEnd = () => { if (!isDraggingRef.current) return; isDraggingRef.current = false; window.removeEventListener('mousemove', handleScrubMove); window.removeEventListener('mouseup', handleScrubEnd); };
 
   return (
-    <div className="video-card" 
-      onMouseDown={handleInteractionStart} onMouseUp={handleInteractionEnd}
-      onTouchStart={handleInteractionStart} onTouchEnd={handleInteractionEnd}
-    >
+    <div className="video-card" onClick={handleVideoClick}>
       <video ref={videoRef} className="video-player" src={video.url} loop playsInline webkit-playsinline="true" preload="metadata" />
       {showInstaPopup && <div className="overlay-popup"><div className="popup-box"><div style={{marginBottom:'20px', display:'flex', flexDirection:'column', alignItems:'center'}}><FaInstagram size={40}/><p>Go to official Instagram?</p></div><div className="popup-actions"><button className="popup-btn btn-cancel" onClick={()=>setShowInstaPopup(false)}>Cancel</button><button className="popup-btn btn-confirm" onClick={confirmInstaRedirect}>Go</button></div></div></div>}
       {isDescExpanded && <div className="expanded-backdrop" onClick={handleBackdropClick}></div>}
@@ -286,7 +288,7 @@ function VideoCard({ video, isActive, user, onShare, onOpenComments }) {
           <button className="toggle-more-btn" onClick={(e)=>{e.stopPropagation();setIsDescExpanded(!isDescExpanded)}} onMouseDown={(e)=>e.stopPropagation()} onTouchStart={(e)=>e.stopPropagation()}>{isDescExpanded?"Ocultar":"Ver más"}</button>
         </div>
       </div>
-      <div className="progress-container" ref={progressBarRef} onMouseDown={handleScrubStart} onTouchStart={handleScrubStart} onTouchMove={handleScrubMove} onTouchEnd={handleScrubEnd}><div className="progress-bar" style={{width:`${progress}%`}}></div></div>
+      <div className="progress-container" ref={progressBarRef} onMouseDown={handleScrubStart} onTouchStart={handleScrubStart} onTouchMove={handleScrubMove} onTouchEnd={handleScrubEnd} onClick={(e)=>e.stopPropagation()}><div className="progress-bar" style={{width:`${progress}%`}}></div></div>
     </div>
   );
 }
