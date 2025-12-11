@@ -1,25 +1,33 @@
-/* App.css - Mobile Native Layout & Safe Areas */
+/* App.css - Mobile Native Layout & Selection Block */
 
 :root {
   --primary-color: #fe2c55;
 }
 
-/* RESET Y BLOQUEO DE SCROLL GLOBAL */
+/* RESET Y BLOQUEO DE SCROLL/SELECCIÓN GLOBAL */
 * {
   box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: transparent; /* Quita el flash gris al tocar */
+  
+  /* BLOQUEO NUCLEAR DE SELECCIÓN */
+  -webkit-touch-callout: none; /* Desactiva menú contextual iOS */
+  -webkit-user-select: none;   /* Chrome/Safari/Opera */
+  -khtml-user-select: none;    /* Konqueror */
+  -moz-user-select: none;      /* Firefox */
+  -ms-user-select: none;       /* IE/Edge */
+  user-select: none;           /* Estándar */
 }
 
+/* FIX PARA ALTURA MÓVIL: Usamos fixed en body para evitar rebotes */
 html, body {
-  margin: 0; padding: 0;
+  margin: 0; padding: 0; 
   background-color: black; color: white;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  /* IMPORTANTE: position fixed 0,0,0,0 obliga a ocupar la pantalla real */
+  overflow: hidden; 
+  width: 100%; 
+  height: 100%; 
   position: fixed; 
-  top: 0; left: 0; right: 0; bottom: 0;
-  width: 100%; height: 100%;
-  overflow: hidden;
-  user-select: none; -webkit-user-select: none;
+  top: 0; left: 0; /* Anclaje firme */
 }
 
 #root {
@@ -59,13 +67,20 @@ html, body {
   position: relative; background-color: #000; overflow: hidden;
 }
 
-.video-player { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* IMPORTANTE: pointer-events none para que el video no capture eventos nativos, 
+   lo gestionamos desde el div padre (.video-card) */
+.video-player { 
+  width: 100%; height: 100%; 
+  object-fit: cover; 
+  display: block; 
+  pointer-events: none; 
+}
 
 /* UI SUPERIOR */
 .top-bar {
   position: absolute; top: 0; left: 0; width: 100%;
   padding: 15px 20px;
-  padding-top: max(15px, env(safe-area-inset-top)); /* Notch support */
+  padding-top: max(15px, env(safe-area-inset-top));
   display: flex; justify-content: space-between; align-items: center;
   z-index: 50;
   background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent);
@@ -74,11 +89,10 @@ html, body {
 .app-title { font-weight: 700; font-size: 16px; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
 .view-count-badge { display: flex; align-items: center; background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; backdrop-filter: blur(5px); }
 
-/* SIDEBAR - Subida de seguridad */
+/* SIDEBAR - Subida de seguridad para evitar corte inferior */
 .right-sidebar {
   position: absolute; right: 10px;
-  /* Margen grande para salvar cualquier barra de navegador */
-  bottom: calc(160px + env(safe-area-inset-bottom));
+  bottom: calc(160px + env(safe-area-inset-bottom)); /* Margen amplio */
   display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 50;
 }
 .sidebar-item { display: flex; flex-direction: column; align-items: center; text-align: center; }
@@ -87,7 +101,7 @@ html, body {
 .sidebar-btn {
   background: none; border: none; color: white; font-size: 26px; padding: 0; cursor: pointer;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
-  pointer-events: auto; /* IMPORTANTE: Activa botones */
+  pointer-events: auto; /* Botones interactivos */
 }
 .sidebar-btn:active { transform: scale(0.9); }
 .sidebar-label { font-size: 11px; font-weight: 600; margin-top: 2px; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
@@ -96,8 +110,7 @@ html, body {
 .bottom-info {
   position: absolute; bottom: 0; left: 0; width: 100%;
   padding: 15px; padding-right: 70px;
-  /* Padding extra grande para garantizar visibilidad */
-  padding-bottom: calc(50px + env(safe-area-inset-bottom));
+  padding-bottom: calc(50px + env(safe-area-inset-bottom)); /* Margen amplio */
   z-index: 50; text-align: left;
   background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 40%, transparent 100%);
   display: flex; flex-direction: column; justify-content: flex-end;
@@ -111,7 +124,7 @@ html, body {
 .description-text.expanded { max-height: 35vh; overflow-y: auto; margin-top: 5px; }
 .toggle-more-btn { background: none; border: none; color: #ccc; font-weight: 600; font-size: 12px; cursor: pointer; padding: 0; margin-top: 4px; pointer-events: auto; }
 
-/* OVERLAY ICONOS */
+/* OVERLAYS */
 .mute-overlay {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
   background: transparent; padding: 0; pointer-events: none; opacity: 0; transition: opacity 0.3s;
@@ -127,9 +140,10 @@ html, body {
 .progress-container {
   position: absolute; left: 0; width: 100%; height: 4px;
   background: rgba(255,255,255,0.2); cursor: pointer; z-index: 100;
-  /* Posicionada 20px desde abajo para librar la barra de gestos */
+  /* Posicionada 20px desde abajo + safe area */
   bottom: max(20px, env(safe-area-inset-bottom));
 }
+.progress-container:hover { height: 8px; }
 .progress-bar { height: 100%; background: #fff; width: 0%; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
 
 /* PANTALLA INICIO */
